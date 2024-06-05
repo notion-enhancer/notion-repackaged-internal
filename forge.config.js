@@ -13,6 +13,71 @@ const sharedLinuxMakersOptions = {
   icon: 'icon.ico',
 }
 
+async function removeConflictingGypBins(buildPath) {
+  const gypPath = path.join(
+    buildPath,
+    'node_modules',
+    'better-sqlite3',
+    'build',
+    'node_gyp_bins',
+  )
+
+  console.log('Removing gyp path:', gypPath)
+  await fs.rm(gypPath, {
+    recursive: true,
+    force: true,
+  })
+}
+
+async function setEnhancerMainField(buildPath) {
+  const packageJsonPath = path.join(
+    buildPath,
+    'node_modules',
+    'notion-enhancer',
+    'package.json',
+  )
+
+  const originalPackageJsonString = await fs.readFile(packageJsonPath, 'utf-8')
+  const packageJson = JSON.parse(originalPackageJsonString)
+
+  packageJson.main = 'src/init.js'
+
+  const modifiedPackageJsonString = JSON.stringify(packageJson, null, 2)
+  await fs.writeFile(packageJsonPath, modifiedPackageJsonString)
+}
+
+async function patchFile(enhancerPatcher, buildPath, file) {
+  const filePath = path.join(buildPath, file)
+  const contents = await fs.readFile(filePath, 'utf-8')
+  const patchedContents = enhancerPatcher.patch(file, contents)
+  await fs.writeFile(filePath, patchedContents)
+}
+
+async function patchAllFiles() {
+  const enhancerPatcher = await import(
+    'notion-enhancer/scripts/patch-desktop-app.mjs'
+  )
+
+  const files = await glob('**/*', {
+    cwd: buildPath,
+    posix: true,
+    nodir: true,
+    absolute: false,
+    ignore: ['**/node_modules/**'],
+  })
+
+  await Promise.all(
+    files.map((file) => patchFile(enhancerPatcher, buildPath, file)),
+  )
+}
+
+async function enhanceSources(buildPath) {
+  console.log('Enhancing sources in:', buildPath)
+
+  await setEnhancerMainField(buildPath)
+  await patchAllFiles(buildPath)
+}
+
 module.exports = {
   packagerConfig: {
     asar: true,
@@ -79,44 +144,11 @@ module.exports = {
   ],
   hooks: {
     packageAfterPrune: async (_forgeConfig, buildPath) => {
-      const gypPath = path.join(
-        buildPath,
-        'node_modules',
-        'better-sqlite3',
-        'build',
-        'node_gyp_bins',
-      )
+      console.log('Running packageAfterPrune hook, currently in:', buildPath)
+      console.log('Directory contents:', await fs.readdir(buildPath))
 
-      console.log('Removing gyp path:', gypPath)
-      await fs.rm(gypPath, {
-        recursive: true,
-        force: true,
-      })
-    },
-
-    postPackage: async (_forgeConfig, options) => {
-      const enhancer = await import(
-        'notion-enhancer/scripts/enhance-desktop-app.mjs'
-      )
-
-      const appAsarPaths = await glob('**/app.asar', {
-        cwd: options.outputPaths[0],
-        absolute: true,
-      })
-
-      if (appAsarPaths.length !== 1) {
-        throw new Error('Expected exactly one app.asar file')
-      }
-
-      const appResourcesDir = path.dirname(appAsarPaths[0])
-      console.log('Setting notion resources path:', appResourcesDir)
-      console.log('Directory contents:', await fs.readdir(appResourcesDir))
-      enhancer.setNotionPath(appResourcesDir)
-
-      const result = await enhancer.enhanceApp(true)
-      if (!result) {
-        throw new Error('Failed to enhance app')
-      }
+      await removeConflictingGypBins(buildPath)
+      await enhanceSources(buildPath)
     },
   },
 }
