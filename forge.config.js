@@ -48,7 +48,7 @@ async function setEnhancerMainField(buildPath) {
 
 async function patchFile(enhancerPatcher, buildPath, file) {
   const filePath = path.join(buildPath, file)
-  const contents = await fs.readFile(filePath, 'utf-8')
+  const contents = await fs.readFile(filePath)
   const patchedContents = enhancerPatcher(file, contents)
 
   if (contents === patchedContents) {
@@ -67,7 +67,7 @@ async function patchAllFiles(buildPath) {
 
   console.log('Enhancer patcher:', enhancerPatcher)
 
-  const files = await glob('**/*', {
+  const files = await glob('**/*.js', {
     cwd: buildPath,
     posix: true,
     nodir: true,
