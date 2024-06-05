@@ -1,5 +1,6 @@
 const path = require('node:path')
 const fs = require('node:fs/promises')
+const { glob } = require('glob')
 
 const sharedLinuxMakersOptions = {
   name: 'notion-enhanced',
@@ -98,12 +99,24 @@ module.exports = {
         'notion-enhancer/scripts/enhance-desktop-app.mjs'
       )
 
-      const path = options.outputPaths[0]
-      console.log('Setting notion path:', path)
-      enhancer.setNotionPath(path)
+      const appAsarPaths = await glob('**/app.asar', {
+        cwd: options.outputPaths[0],
+        absolute: true,
+      })
+
+      if (appAsarPaths.length !== 1) {
+        throw new Error('Expected exactly one app.asar file')
+      }
+
+      const appResourcesDir = path.dirname(appAsarPaths[0])
+      console.log('Setting notion resources path:', appResourcesDir)
+      console.log('Directory contents:', await fs.readdir(appResourcesDir))
+      enhancer.setNotionPath(appResourcesDir)
 
       const result = await enhancer.enhanceApp(true)
-      console.log('Enhancer result:', result)
+      if (!result) {
+        throw new Error('Failed to enhance app')
+      }
     },
   },
 }
