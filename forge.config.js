@@ -49,7 +49,7 @@ async function setEnhancerMainField(buildPath) {
 async function patchFile(enhancerPatcher, buildPath, file) {
   const filePath = path.join(buildPath, file)
   const contents = await fs.readFile(filePath, 'utf-8')
-  const patchedContents = enhancerPatcher.patch(file, contents)
+  const patchedContents = enhancerPatcher(file, contents)
 
   if (contents === patchedContents) {
     return false
