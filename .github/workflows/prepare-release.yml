@@ -1,0 +1,174 @@
+name: Notion Repackaged Enhanced
+
+on:
+  workflow_dispatch:
+    inputs:
+      notion_version:
+        description: "Notion version"
+        required: true
+        default: "3.9.1"
+      custom_version:
+        description: "Custom target version"
+        required: true
+        default: "1.0.0"
+
+env:
+  NOTION_DESKTOP_BASE_URL: https://desktop-release.notion-static.com
+
+jobs:
+  prepare-source:
+    name: Prepare source
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create work directory
+        run: rm -rf work; mkdir work
+
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install -y 7zip
+
+      - name: Download release
+        working-directory: work
+        env:
+          NOTION_VERSION: ${{ github.event.inputs.notion_version }}
+        run: curl -o Notion.exe ${NOTION_DESKTOP_BASE_URL}/Notion%20Setup%20${NOTION_VERSION}.exe
+
+      - name: Extract exe
+        working-directory: work
+        run: 7zz x Notion.exe -oexe-extracted -y
+
+      - name: Extract app package
+        working-directory: work
+        run: 7zz x exe-extracted/\$PLUGINSDIR/app-64.7z -oapp-extracted -y
+
+      - name: Extract asar
+        working-directory: work
+        run: npx @electron/asar extract app-extracted/resources/app.asar asar-extracted
+
+      - name: Copy necessary files to source
+        working-directory: work
+        run: |
+          rm -rf clean-source
+          mkdir clean-source
+
+          cp -r asar-extracted/. clean-source
+          rm -rf clean-source/node_modules
+
+          mkdir -p clean-source/extraResources	
+          cp app-extracted/resources/trayIcon.ico clean-source/extraResources
+
+      - name: Fix and clean package.json
+        working-directory: work/clean-source
+        run: |
+          jq 'del(.overrides)' package.json \
+            | jq 'del(.scripts["postinstall"])' \
+            | jq 'del(.dependencies["@notionhq/shared"])' \
+            | jq 'del(.dependencies["@notionhq/shared-intl"])' \
+            | jq 'del(.dependencies["@notionhq/shared-utils"])' \
+            | jq 'del(.dependencies["@notionhq/test-framework"])' \
+            > package.json.tmp
+
+          rm package.json && mv package.json.tmp package.json
+
+      - name: Change version in package.json
+        working-directory: work/clean-source
+        env:
+          CUSTOM_VERSION: ${{ github.event.inputs.custom_version }}
+        run: |
+          jq --arg custom_version "${CUSTOM_VERSION}" \
+            '.version=$custom_version' package.json \
+            > package.json.tmp
+
+          rm package.json && mv package.json.tmp package.json
+
+      - name: Copy custom electron-forge config
+        run: cp forge.config.js work/clean-source
+
+      - name: Install/upgrade electron-forge packages
+        working-directory: work/clean-source
+        env:
+          ELECTRON_FORGE_VERSION: 7.4.0
+        run: |
+          npm install --package-lock-only --no-package-lock --save-dev \
+            @electron-forge/cli@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/core@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-deb@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-dmg@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-rpm@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-zip@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/plugin-auto-unpack-natives@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/plugin-fuses@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/plugin-webpack@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/publisher-github@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/shared-types@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-squirrel@${ELECTRON_FORGE_VERSION} \
+            electron-installer-debian@3.2.0
+
+      - name: Install enhancer package
+        working-directory: work/clean-source
+        env:
+          NOTION_ENHANCER_COMMIT: d459455f3d895e82b2ac582d4f450e0a26370226
+        run: |
+          npm install --package-lock-only --no-package-lock --save \
+            git://github.com/notion-enhancer/notion-enhancer.git#${NOTION_ENHANCER_COMMIT}
+
+      - name: Update lockfile
+        working-directory: work/clean-source
+        run: npm install --package-lock-only
+
+      - name: Zip source directory
+        working-directory: work
+        run: 7zz a source.zip clean-source/.
+
+      - name: Save source as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: source
+          path: work/source.zip
+
+  build-app:
+    name: Build app
+    needs: [prepare-source]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create work directory
+        run: rm -rf work; mkdir work
+
+      - name: Download source artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: source
+          path: work
+
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install -y 7zip rpm dpkg fakeroot
+
+      - name: Unzip source
+        working-directory: work
+        run: 7zz x source.zip -osource
+
+      - name: Install packages
+        working-directory: work/source
+        run: npm install
+
+      - name: Build and publish app
+        working-directory: work/source
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-forge publish
+
+  cleanup:
+    name: Artifacts cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [build-app]
+    steps:
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+          name: source
