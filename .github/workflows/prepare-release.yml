@@ -14,7 +14,7 @@ on:
       notion_enhancer_commit:
         description: "Notion enhancer commit"
         required: true
-        default: "d459455f3d895e82b2ac582d4f450e0a26370226"
+        default: "7fe9bb2543cbc8f0c74adb0b90104281528c4af3"
 
 env:
   NOTION_DESKTOP_BASE_URL: https://desktop-release.notion-static.com
