@@ -172,7 +172,7 @@ jobs:
       # https://github.com/nodejs/node-gyp/issues/2869
       - name: Install distutils for Python >= 3.12
         shell: bash
-        run: pip install setuptools
+        run: python3 -m pip install setuptools
 
       - name: Unzip source
         working-directory: work
