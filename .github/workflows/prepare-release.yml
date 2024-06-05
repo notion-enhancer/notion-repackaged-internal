@@ -132,7 +132,11 @@ jobs:
   build-app:
     name: Build app
     needs: [prepare-source]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
