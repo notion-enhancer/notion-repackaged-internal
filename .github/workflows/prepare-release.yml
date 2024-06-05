@@ -169,6 +169,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y rpm dpkg fakeroot
         if: matrix.os == 'ubuntu-latest'
 
+      # https://github.com/nodejs/node-gyp/issues/2869
+      - name: Install distutils for Python >= 3.12
+        shell: bash
+        run: pip install setuptools
+
       - name: Unzip source
         working-directory: work
         shell: bash
