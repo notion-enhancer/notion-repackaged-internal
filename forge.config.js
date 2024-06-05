@@ -67,10 +67,11 @@ async function patchAllFiles(buildPath) {
 
   console.log('Enhancer patcher:', enhancerPatcher)
 
-  const files = await glob('**/**', {
+  const files = await glob('**/*', {
     cwd: buildPath,
     posix: true,
     nodir: true,
+    dot: true,
     absolute: false,
     ignore: ['**/node_modules/**'],
   })
