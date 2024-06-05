@@ -86,6 +86,7 @@ module.exports = {
         'node_gyp_bins',
       )
 
+      console.log('Removing gyp path:', gypPath)
       await fs.rm(gypPath, {
         recursive: true,
         force: true,
@@ -98,9 +99,11 @@ module.exports = {
       )
 
       const path = options.outputPaths[0]
+      console.log('Setting notion path:', path)
       enhancer.setNotionPath(path)
 
-      await enhancer.enhanceApp(true)
+      const result = await enhancer.enhanceApp(true)
+      console.log('Enhancer result:', result)
     },
   },
 }
