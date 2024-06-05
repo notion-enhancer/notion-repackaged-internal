@@ -151,7 +151,17 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        target: [windows, linux, macos]
+        include:
+        - target: windows
+          os: windows-latest
+          arch: x64,arm64
+        - target: linux
+          os: ubuntu-latest
+          arch: x64,arm64
+        - target: macos
+          os: macos-latest
+          arch: universal
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -196,7 +206,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-forge publish
+        run: npx electron-forge publish --arch=${{ matrix.arch }}
 
   cleanup:
     name: Artifacts cleanup
