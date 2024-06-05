@@ -64,7 +64,7 @@ jobs:
           cp -r asar-extracted/. clean-source
           rm -rf clean-source/node_modules
 
-          mkdir -p clean-source/extraResources	
+          mkdir -p clean-source/extraResources
           cp app-extracted/resources/trayIcon.ico clean-source/extraResources
 
       - name: Fix and clean package.json
@@ -115,7 +115,9 @@ jobs:
             @electron-forge/plugin-webpack@${ELECTRON_FORGE_VERSION} \
             @electron-forge/publisher-github@${ELECTRON_FORGE_VERSION} \
             @electron-forge/shared-types@${ELECTRON_FORGE_VERSION} \
-            @electron-forge/maker-squirrel@${ELECTRON_FORGE_VERSION} \
+            @electron-forge/maker-squirrel@${ELECTRON_FORGE_VERSION}
+
+          npm install --package-lock-only --no-package-lock --save-optional \
             electron-installer-debian@3.2.0
 
       - name: Install enhancer package
@@ -126,10 +128,10 @@ jobs:
           npm install --package-lock-only --no-package-lock --save \
             git://github.com/notion-enhancer/notion-enhancer.git#${NOTION_ENHANCER_COMMIT}
 
-      # - name: Update lockfile
-      #   working-directory: work/clean-source
-      #   shell: bash
-      #   run: npm install --package-lock-only
+      - name: Update lockfile
+        working-directory: work/clean-source
+        shell: bash
+        run: npm install --package-lock-only
 
       - name: Zip source directory
         working-directory: work
