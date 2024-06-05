@@ -61,7 +61,7 @@ async function patchFile(enhancerPatcher, buildPath, file) {
 }
 
 async function patchAllFiles(buildPath) {
-  const enhancerPatcher = await import(
+  const { default: enhancerPatcher } = await import(
     'notion-enhancer/scripts/patch-desktop-app.mjs'
   )
 
