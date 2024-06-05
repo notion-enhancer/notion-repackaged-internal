@@ -65,6 +65,8 @@ async function patchAllFiles(buildPath) {
     'notion-enhancer/scripts/patch-desktop-app.mjs'
   )
 
+  console.log('Enhancer patcher:', enhancerPatcher)
+
   const files = await glob('**/*', {
     cwd: buildPath,
     posix: true,
@@ -86,8 +88,8 @@ async function patchAllFiles(buildPath) {
 async function enhanceSources(buildPath) {
   console.log('Enhancing sources in:', buildPath)
 
-  await setEnhancerMainField(buildPath)
   await patchAllFiles(buildPath)
+  await setEnhancerMainField(buildPath)
 }
 
 module.exports = {
