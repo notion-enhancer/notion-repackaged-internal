@@ -31,9 +31,6 @@ jobs:
       - name: Create work directory
         run: rm -rf work; mkdir work
 
-      - name: Install system packages
-        run: sudo apt-get update && sudo apt-get install -y 7zip
-
       - name: Download release
         working-directory: work
         env:
@@ -42,11 +39,11 @@ jobs:
 
       - name: Extract exe
         working-directory: work
-        run: 7zz x Notion.exe -oexe-extracted -y
+        run: 7z x Notion.exe -oexe-extracted -y
 
       - name: Extract app package
         working-directory: work
-        run: 7zz x exe-extracted/\$PLUGINSDIR/app-64.7z -oapp-extracted -y
+        run: 7z x exe-extracted/\$PLUGINSDIR/app-64.7z -oapp-extracted -y
 
       - name: Extract asar
         working-directory: work
@@ -125,7 +122,7 @@ jobs:
 
       - name: Zip source directory
         working-directory: work
-        run: 7zz a source.zip clean-source/.
+        run: 7z a source.zip clean-source/.
 
       - name: Save source as artifact
         uses: actions/upload-artifact@v3
@@ -155,12 +152,12 @@ jobs:
           path: work
 
       - name: Install system packages
-        run: sudo apt-get update && sudo apt-get install -y 7zip rpm dpkg fakeroot
+        run: sudo apt-get update && sudo apt-get install -y rpm dpkg fakeroot
         if: matrix.os == 'ubuntu-latest'
 
       - name: Unzip source
         working-directory: work
-        run: 7zz x source.zip -osource
+        run: 7z x source.zip -osource
 
       - name: Install packages
         working-directory: work/source
