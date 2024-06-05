@@ -156,6 +156,7 @@ jobs:
 
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install -y 7zip rpm dpkg fakeroot
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Unzip source
         working-directory: work
