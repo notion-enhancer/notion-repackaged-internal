@@ -67,7 +67,7 @@ async function patchAllFiles(buildPath) {
 
   console.log('Enhancer patcher:', enhancerPatcher)
 
-  const files = await glob('**/*', {
+  const files = await glob('**/**', {
     cwd: buildPath,
     posix: true,
     nodir: true,
@@ -75,8 +75,11 @@ async function patchAllFiles(buildPath) {
     ignore: ['**/node_modules/**'],
   })
 
+  console.log('Files to patch:', files)
+
   await Promise.all(
     files.map(async (file) => {
+      console.log('Trying to patch file:', file)
       const fileModified = await patchFile(enhancerPatcher, buildPath, file)
       if (fileModified) {
         console.log('Patcher modified file:', file)
