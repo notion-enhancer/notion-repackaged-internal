@@ -50,7 +50,14 @@ async function patchFile(enhancerPatcher, buildPath, file) {
   const filePath = path.join(buildPath, file)
   const contents = await fs.readFile(filePath, 'utf-8')
   const patchedContents = enhancerPatcher.patch(file, contents)
+
+  if (contents === patchedContents) {
+    return false
+  }
+
   await fs.writeFile(filePath, patchedContents)
+
+  return true
 }
 
 async function patchAllFiles() {
@@ -67,7 +74,12 @@ async function patchAllFiles() {
   })
 
   await Promise.all(
-    files.map((file) => patchFile(enhancerPatcher, buildPath, file)),
+    files.map(async (file) => {
+      const fileModified = await patchFile(enhancerPatcher, buildPath, file)
+      if (fileModified) {
+        console.log('Patcher modified file:', file)
+      }
+    }),
   )
 }
 
