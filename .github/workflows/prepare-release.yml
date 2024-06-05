@@ -11,6 +11,10 @@ on:
         description: "Custom target version"
         required: true
         default: "1.0.0"
+      notion_enhancer_commit:
+        description: "Notion enhancer commit"
+        required: true
+        default: "d459455f3d895e82b2ac582d4f450e0a26370226"
 
 env:
   NOTION_DESKTOP_BASE_URL: https://desktop-release.notion-static.com
@@ -110,7 +114,7 @@ jobs:
       - name: Install enhancer package
         working-directory: work/clean-source
         env:
-          NOTION_ENHANCER_COMMIT: d459455f3d895e82b2ac582d4f450e0a26370226
+          NOTION_ENHANCER_COMMIT: ${{ github.event.inputs.notion_enhancer_commit }}
         run: |
           npm install --package-lock-only --no-package-lock --save \
             git://github.com/notion-enhancer/notion-enhancer.git#${NOTION_ENHANCER_COMMIT}
