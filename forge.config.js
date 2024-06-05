@@ -64,7 +64,7 @@ module.exports = {
       config: {
         repository: {
           owner: 'notion-enhancer',
-          name: 'notion-repackaged',
+          name: 'notion-repackaged-internal',
         },
         prerelease: true,
       },
