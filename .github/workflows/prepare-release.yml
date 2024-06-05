@@ -126,10 +126,10 @@ jobs:
           npm install --package-lock-only --no-package-lock --save \
             git://github.com/notion-enhancer/notion-enhancer.git#${NOTION_ENHANCER_COMMIT}
 
-      - name: Update lockfile
-        working-directory: work/clean-source
-        shell: bash
-        run: npm install --package-lock-only
+      # - name: Update lockfile
+      #   working-directory: work/clean-source
+      #   shell: bash
+      #   run: npm install --package-lock-only
 
       - name: Zip source directory
         working-directory: work
