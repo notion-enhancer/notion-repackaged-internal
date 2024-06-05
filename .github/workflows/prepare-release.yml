@@ -29,28 +29,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create work directory
+        shell: bash
         run: rm -rf work; mkdir work
 
       - name: Download release
         working-directory: work
+        shell: bash
         env:
           NOTION_VERSION: ${{ github.event.inputs.notion_version }}
         run: curl -o Notion.exe ${NOTION_DESKTOP_BASE_URL}/Notion%20Setup%20${NOTION_VERSION}.exe
 
       - name: Extract exe
         working-directory: work
+        shell: bash
         run: 7z x Notion.exe -oexe-extracted -y
 
       - name: Extract app package
         working-directory: work
+        shell: bash
         run: 7z x exe-extracted/\$PLUGINSDIR/app-64.7z -oapp-extracted -y
 
       - name: Extract asar
         working-directory: work
+        shell: bash
         run: npx @electron/asar extract app-extracted/resources/app.asar asar-extracted
 
       - name: Copy necessary files to source
         working-directory: work
+        shell: bash
         run: |
           rm -rf clean-source
           mkdir clean-source
@@ -63,6 +69,7 @@ jobs:
 
       - name: Fix and clean package.json
         working-directory: work/clean-source
+        shell: bash
         run: |
           jq 'del(.overrides)' package.json \
             | jq 'del(.scripts["postinstall"])' \
@@ -76,6 +83,7 @@ jobs:
 
       - name: Change version in package.json
         working-directory: work/clean-source
+        shell: bash
         env:
           CUSTOM_VERSION: ${{ github.event.inputs.custom_version }}
         run: |
@@ -86,10 +94,12 @@ jobs:
           rm package.json && mv package.json.tmp package.json
 
       - name: Copy custom electron-forge config
+        shell: bash
         run: cp forge.config.js work/clean-source
 
       - name: Install/upgrade electron-forge packages
         working-directory: work/clean-source
+        shell: bash
         env:
           ELECTRON_FORGE_VERSION: 7.4.0
         run: |
@@ -118,10 +128,12 @@ jobs:
 
       - name: Update lockfile
         working-directory: work/clean-source
+        shell: bash
         run: npm install --package-lock-only
 
       - name: Zip source directory
         working-directory: work
+        shell: bash
         run: 7z a source.zip clean-source/.
 
       - name: Save source as artifact
@@ -143,6 +155,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create work directory
+        shell: bash
         run: rm -rf work; mkdir work
 
       - name: Download source artifact
@@ -152,19 +165,23 @@ jobs:
           path: work
 
       - name: Install system packages
+        shell: bash
         run: sudo apt-get update && sudo apt-get install -y rpm dpkg fakeroot
         if: matrix.os == 'ubuntu-latest'
 
       - name: Unzip source
         working-directory: work
+        shell: bash
         run: 7z x source.zip -osource
 
       - name: Install packages
         working-directory: work/source
+        shell: bash
         run: npm install
 
       - name: Build and publish app
         working-directory: work/source
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-forge publish
