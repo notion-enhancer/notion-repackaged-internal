@@ -6,7 +6,7 @@ on:
       notion_version:
         description: "Notion version"
         required: true
-        default: "3.9.1"
+        default: "4.2.0"
       custom_version:
         description: "Custom target version"
         required: true
@@ -14,7 +14,7 @@ on:
       notion_enhancer_commit:
         description: "Notion enhancer commit"
         required: true
-        default: "7fe9bb2543cbc8f0c74adb0b90104281528c4af3"
+        default: "dae9700b0b762dfb63fc7f5f9b4d42d2b37f2ae1"
 
 env:
   NOTION_DESKTOP_BASE_URL: https://desktop-release.notion-static.com
