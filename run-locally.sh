@@ -4,7 +4,7 @@ sudo rm -rf artifacts && echo 'Deleted artifacts folder'
 
 sudo rm -rf work && echo 'Deleted work folder'
 
-ACTIONS_RUNTIME_URL=http://host.docker.internal:4322/ gh act --bind \
+act --bind \
  --artifact-server-path artifacts \
  --artifact-server-addr 0.0.0.0 \
  --artifact-server-port 4322 \

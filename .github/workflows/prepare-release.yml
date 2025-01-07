@@ -43,6 +43,9 @@ jobs:
           NOTION_VERSION: ${{ github.event.inputs.notion_version }}
         run: curl -o Notion.exe ${NOTION_DESKTOP_BASE_URL}/Notion%20Setup%20${NOTION_VERSION}.exe
 
+      - name: Install dependencies
+        run: sudo apt-get update -y && sudo apt-get install -y p7zip-full
+
       - name: Extract exe
         working-directory: work
         shell: bash
